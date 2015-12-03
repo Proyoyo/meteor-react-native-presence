@@ -1,0 +1,22 @@
+# OSX
+#
+.DS_Store
+.flowconfig
+.watchmanconfig
+
+# node.js
+#
+node_modules/
+npm-debug.log
+
+# meteor
+#
+.meteor/
+
+# Android
+#
+android/
+
+# iOS
+#
+ios/

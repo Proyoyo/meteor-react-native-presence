@@ -1,0 +1,26 @@
+<head>
+  <title>Presence</title>
+</head>
+
+<body>
+
+
+  <h1>Online users</h1>
+
+  <form class ="change-name">
+      <input type="text" name="text" placeholder="Type to change your name" />
+  </form>
+
+  <ul>
+      {{#each users}}
+        {{>user}}
+      {{/each}}
+  </ul>
+
+</body>
+
+<template name="user">
+    <li>
+        <span class="user"><strong>{{username}}</strong> ({{address}}) - {{connectedOn}}</span>
+    </li>
+</template>
