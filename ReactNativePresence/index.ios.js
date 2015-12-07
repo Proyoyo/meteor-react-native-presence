@@ -38,13 +38,16 @@ var styles = StyleSheet.create({
 
   loginForm: {
     flexDirection: "row",
-    alignItems: "center"
+    alignItems: "center",
+    marginTop: 10
   },
 
   loginBox: {
     flex: 2,
-    borderColor: "#ffaa80",
-    borderWidth: 1
+    borderColor: "#aaaaaa",
+    borderWidth: 1,
+    marginLeft: 5,
+    marginRight: 5
   },
 
   loginButton: {

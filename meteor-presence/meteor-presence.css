@@ -1,7 +1,5 @@
 body{
     font-family: sans-serif;
-    background-color: #6699ff;
-    background-image: linear-gradient(to bottom, #6699ff, #ff9966 100%);
     background-attachment: fixed;
 
     position: absolute;
@@ -46,5 +44,4 @@ li{
 ul{
     margin: 0;
     padding: 0;
-    background: white;
 }
