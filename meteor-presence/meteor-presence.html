@@ -3,24 +3,68 @@
 </head>
 
 <body>
+  <h1>Registered users</h1>
 
 
-  <h1>Online users</h1>
+
+
+
+  {{#if currentUser}}
+      <form class="logout">
+          <div>
+              <input type="submit" class="logout-button" value="Logout" />
+          </div>
+      </form>
+  {{else}}
+      <form id="register-form" action="action">
+          <div>
+              <input type="username" name="username" id="account-username" />
+              <input type="password" name="password" id="account-password" />
+              <input type="submit" id="create-button" value="Create an Account" />
+          </div>
+      </form>
+
+      <form id="login-form" action="action">
+          <div>
+              <input type="username" name="username" id="login-username" />
+              <input type="password" name="password" id="login-password" />
+              <input type="submit" id="login-button" value="Sign in" />
+          </div>
+      </form>
+
+
+  {{/if}}
+
+  <ul>
+      {{#each registeredUsers}}
+        {{>registeredUser}}
+      {{/each}}
+  </ul>
+
+  <h1>Anonymous users</h1>
 
   <form class ="change-name">
-      <input type="text" name="text" placeholder="Type to change your name" />
+      <div>
+          <input type="text" name="text" placeholder="Type to change your name" />
+      </div>
   </form>
 
   <ul>
-      {{#each users}}
-        {{>user}}
+      {{#each presences}}
+        {{>presence}}
       {{/each}}
   </ul>
 
 </body>
 
-<template name="user">
+<template name="presence">
     <li>
-        <span class="user"><strong>{{username}}</strong> ({{address}}) - {{connectedOn}}</span>
+        <span class="presence"><strong>{{username}}</strong> ({{address}}) - {{connectedOn}}</span>
+    </li>
+</template>
+
+<template name="registeredUser">
+    <li>
+        <span class="registeredUser"><strong>{{username}}</strong> ({{address}}) - {{connectedOn}}</span>
     </li>
 </template>
