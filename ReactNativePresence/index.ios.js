@@ -4,13 +4,16 @@ var DDPClient = require('ddp-client');
 var React = require('react-native');
 var _ = require('lodash');
 var ddpClient;
+var ddpClientTwo;
 var {
   AppRegistry,
   StyleSheet,
   Text,
   View,
   ListView,
-  TextInput
+  TextInput,
+  TouchableHighlight,
+  Platform
 } = React;
 
 var styles = StyleSheet.create({
@@ -33,10 +36,37 @@ var styles = StyleSheet.create({
     fontSize: 12
   },
 
+  loginForm: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 10
+  },
+
+  loginBox: {
+    flex: 2,
+    borderColor: "#aaaaaa",
+    borderWidth: 1,
+    marginLeft: 5,
+    marginRight: 5
+  },
+
+  loginButton: {
+    flex: 1,
+    backgroundColor: "6699ff",
+    flexDirection: "column",
+    alignItems: "center",
+    borderRadius: 5
+  },
+
+  loginButtonText:{
+      color: "#ffffff",
+      textAlign: "justify",
+      flex: 1
+  },
+
   listView: {
       paddingTop: 10,
-      backgroundColor: 'white',
-      textAlign: 'left'
+      backgroundColor: 'white'
   },
 
   nameInput: {
@@ -50,37 +80,139 @@ var ReactNativePresence = React.createClass({
 
     getInitialState: function(){
         return{
-            dataSource: new ListView.DataSource({
+            anonData: new ListView.DataSource({
                 rowHasChanged: (row1, row2) => !_.isEqual(row1, row2),
             }),
-            loaded: false,
+            loggedData: new ListView.DataSource({
+                rowHasChanged: (row1, row2) => !_.isEqual(row1, row2),
+            }),
+            anonLoaded: false,
+            loggedLoaded: false,
+            loginState: false
         };
     },
 
     componentDidMount: function(){
         ddpClient = new DDPClient({url: 'ws://localhost:3000/websocket'});
+        //ddpClientTwo = new DDPClient({url: 'ws://localhost:3000/websocket'});
         // Subscribe to publication
-        ddpClient.connect(() => ddpClient.subscribe("users", [], function(){
-            console.log(ddpClient.collections.presences);
-        } ));
+        ddpClient.connect(() => {
+            ddpClient.subscribe("presences", [], function(){
+                console.log(ddpClient.collections.presences);
+            });
+
+
+            ddpClient.subscribe("users", [], function(){
+                console.log(ddpClient.collections.logged);
+            });
+
+
+        });
+
+        /*
+        ddpClientTwo.connect(() => ddpClientTwo.subscribe("users", [], function(){
+            console.log(ddpClientTwo.collections.logged);
+        }));
+        */
         // Observe "presences" collection
         var observer = ddpClient.observe("presences");
+        var loggedObserver = ddpClient.observe("logged")
         // When something is added, changed, or removed, deep copy the data
-        observer.added = () => this.updateRows(_.cloneDeep(_.values(ddpClient.collections.presences)));
-        observer.changed = () => this.updateRows(_.cloneDeep(_.values(ddpClient.collections.presences)));
-        observer.removed = () => this.updateRows(_.cloneDeep(_.values(ddpClient.collections.presences)));
+        observer.added = () => this.updateAnonRows(_.cloneDeep(_.values(ddpClient.collections.presences)));
+        observer.changed = () => this.updateAnonRows(_.cloneDeep(_.values(ddpClient.collections.presences)));
+        observer.removed = () => this.updateAnonRows(_.cloneDeep(_.values(ddpClient.collections.presences)));
+
+        loggedObserver.added = () => this.updateLoggedRows(_.cloneDeep(_.values(ddpClient.collections.logged)));
+        loggedObserver.changed = () => this.updateLoggedRows(_.cloneDeep(_.values(ddpClient.collections.logged)));
+        loggedObserver.removed = () => this.updateLoggedRows(_.cloneDeep(_.values(ddpClient.collections.logged)));
     },
 
-    updateRows: function(rows){
+    updateAnonRows: function(rows){
         this.setState({
-            dataSource: this.state.dataSource.cloneWithRows(rows),
-            loaded: true,
+            anonData: this.state.anonData.cloneWithRows(rows),
+            anonLoaded: true,
         });
+    },
+
+    updateLoggedRows: function(rows){
+        this.setState({
+            loggedData: this.state.loggedData.cloneWithRows(rows),
+            loggedLoaded: true,
+        });
+    },
+
+    onLoginPressed(){
+        var username = this.state.username;
+        var password = this.state.password;
+        var self = this;
+        console.log(username + password);
+        ddpClient.call('login', [{user: {username: username}, password: password}],
+        function(err, result) {
+            console.log(err)
+            if(!err){
+                ddpClient.call('customLogin', [], function(err, result) {console.log(err)}, function(){console.log('updated entry')});
+                self.state.loginState = true;
+            }
+        },
+        function() {
+            console.log("Called login function");
+        });
+    },
+
+    onLogoutPressed(){
+        var self = this;
+        ddpClient.call('logout', [], function(err, result) {
+            console.log(err);
+            if(!err){
+                ddpClient.call('customLogout', [], function(err, result) {console.log(err)}, function(){console.log('removed entry')});
+                self.state.loginState = false;
+            }
+        },
+        function(){
+            console.log("Called logout function");
+        });
+    },
+
+    renderLogin: function(){
+        if(this.state.loginState){
+            return(
+                <View style={styles.loginForm}>
+                    <TouchableHighlight
+                        style={styles.loginButton}
+                        onPress={this.onLogoutPressed}>
+                        <Text style={styles.loginButtonText}>Logout</Text>
+                    </TouchableHighlight>
+                </View>
+            );
+        } else {
+            return(
+                <View style={styles.loginForm}>
+                    <TextInput
+                        style={styles.loginBox}
+                        placeholder= "username"
+                        onChangeText={(text) => this.setState({username: text})}
+                        value={this.state.username}
+                    />
+                    <TextInput
+                        style={styles.loginBox}
+                        placeholder= "password"
+                        password = {true}
+                        onChangeText={(text) => this.setState({password: text})}
+                        value={this.state.password}
+                    />
+                    <TouchableHighlight
+                        style={styles.loginButton}
+                        onPress={this.onLoginPressed}>
+                        <Text style={styles.loginButtonText}>Login</Text>
+                    </TouchableHighlight>
+                </View>
+            );
+        }
     },
 
     render: function() {
         // If data is not loaded, return other view
-        if(!this.state.loaded){
+        if(!this.state.anonLoaded && this.state.loggedLoaded){
             return this.renderLoadingView();
         }
 
@@ -88,28 +220,44 @@ var ReactNativePresence = React.createClass({
             <View>
                 <View style={styles.container}>
                     <Text style={styles.title}>
-                        Online users
+                        Registered Users
                     </Text>
                 </View>
 
-                <TextInput
-                    style={styles.nameInput}
-                    onChangeText={(text) => {ddpClient.call(
-                        'changeName',
-                        [text],
-                        function(err, result) {console.log('called function')},
-                        function() {console.log('updated')}
-                    )}}
-                    value={this.state.text}
-                    placeholder= 'Type to change your name'
-                    placeholderTextColor= '#ffbb99'
-                />
+                {this.renderLogin()}
 
                 <ListView
-                    dataSource={this.state.dataSource}
-                    renderRow={this.renderList}
+                    dataSource={this.state.loggedData}
+                    renderRow={this.renderLogged}
                     style={styles.listView}
                 />
+
+                <View>
+                    <View style={styles.container}>
+                        <Text style={styles.title}>
+                            Anonymous users
+                        </Text>
+                    </View>
+
+                    <TextInput
+                        style={styles.nameInput}
+                        onChangeText={(text) => {ddpClient.call(
+                            'changeName',
+                            [text],
+                            function(err, result) {console.log('called function')},
+                            function() {console.log('updated')}
+                        )}}
+                        value={this.state.text}
+                        placeholder= 'Type to change your name'
+                        placeholderTextColor= '#ffbb99'
+                    />
+
+                    <ListView
+                        dataSource={this.state.anonData}
+                        renderRow={this.renderAnon}
+                        style={styles.listView}
+                    />
+                </View>
             </View>
         );
     },
@@ -125,10 +273,18 @@ var ReactNativePresence = React.createClass({
         );
     },
 
-    renderList: function(presences){
+    renderAnon: function(presences){
         return(
             <View >
                 <Text style={styles.user}>{presences.username} ({presences.address}) - {presences.connectedOn.toDateString()}</Text>
+            </View>
+        );
+    },
+
+    renderLogged: function(logged){
+        return(
+            <View>
+                <Text style={styles.user}>{logged.username} ({logged.address}) - {logged.connectedOn.toDateString()}</Text>
             </View>
         );
     }
