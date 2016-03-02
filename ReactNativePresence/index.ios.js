@@ -52,7 +52,7 @@ var styles = StyleSheet.create({
 
   loginButton: {
     flex: 1,
-    backgroundColor: "6699ff",
+    backgroundColor: "#6699ff",
     flexDirection: "column",
     alignItems: "center",
     borderRadius: 5
